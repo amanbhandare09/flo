@@ -1,4 +1,3 @@
-// src/store/transactionStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,9 +8,9 @@ interface TransactionStore {
   transactions: Transaction[];
   hasSeeded: boolean;
   addTransaction: (t: Omit<Transaction, 'id' | 'createdAt'>) => void;
-  updateTransaction: (id: string, t: Partial<Transaction>) => void;
+  updateTransaction: (id: string, data: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
-  seedIfEmpty: () => void;
+  initSeed: () => void;
 }
 
 export const useTransactionStore = create<TransactionStore>()(
@@ -20,36 +19,26 @@ export const useTransactionStore = create<TransactionStore>()(
       transactions: [],
       hasSeeded: false,
 
-      seedIfEmpty: () => {
+      initSeed: () => {
         if (!get().hasSeeded) {
           set({ transactions: seedTransactions, hasSeeded: true });
         }
       },
 
-      addTransaction: (t) => set((state) => ({
-        transactions: [
-          {
-            ...t,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-          },
-          ...state.transactions,
-        ],
+      addTransaction: (t) => set(state => ({
+        transactions: [{
+          ...t, id: Date.now().toString(), createdAt: new Date().toISOString()
+        }, ...state.transactions]
       })),
 
-      updateTransaction: (id, updated) => set((state) => ({
-        transactions: state.transactions.map((t) =>
-          t.id === id ? { ...t, ...updated } : t
-        ),
+      updateTransaction: (id, data) => set(state => ({
+        transactions: state.transactions.map(t => t.id === id ? { ...t, ...data } : t)
       })),
 
-      deleteTransaction: (id) => set((state) => ({
-        transactions: state.transactions.filter((t) => t.id !== id),
+      deleteTransaction: (id) => set(state => ({
+        transactions: state.transactions.filter(t => t.id !== id)
       })),
     }),
-    {
-      name: 'flo-transactions',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
+    { name: 'flo-transactions', storage: createJSONStorage(() => AsyncStorage) }
   )
 );

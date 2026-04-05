@@ -1,5 +1,3 @@
-// src/types/index.ts
-
 export type TransactionType = 'income' | 'expense';
 
 export type Category =
@@ -12,7 +10,7 @@ export interface Transaction {
   amount: number;
   type: TransactionType;
   category: Category;
-  date: string;        // ISO 8601
+  date: string;
   note?: string;
   createdAt: string;
 }
@@ -20,14 +18,8 @@ export interface Transaction {
 export interface Goal {
   id: string;
   label: string;
-  category?: Category;  // null = overall savings goal
+  category?: Category;
   targetAmount: number;
-  month: string;        // '2026-04'
-}
-
-export interface MonthSummary {
-  totalIncome: number;
-  totalExpenses: number;
-  balance: number;
-  savingsRate: number;  // percentage
+  currentAmount: number;
+  month: string;
 }
