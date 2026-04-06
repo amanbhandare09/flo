@@ -5,19 +5,25 @@
 
 ---
 
-## 📱 Demo
+## 🚀 Try the App
 
-| Home | Transactions | Insights | Goals |
-|------|-------------|----------|-------|
-| ![home]() | ![tx]() | ![insights]() | ![goals]() |
+### Option 1 — Expo Go (Instant, no install needed)
+1. Install [Expo Go](https://expo.dev/go) on your phone.
+2. Open this link directly on your mobile device:
+   **[exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66](exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66)**
+   
+   **OR scan this QR code:**<br>
+   <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66" alt="Expo Go QR Code" width="200" height="200"/>
 
-**APK Download:** [Link after EAS build]  
-**Demo Video:** [Loom/YouTube link]
+### Option 2 — APK (Android direct install)
+*[Download APK from Expo Dashboard](https://expo.dev/accounts/amanb09/projects/flo-finance/builds)*
+*(Note: Requires running `eas build -p android --profile preview` to generate the file).*
 
-**Demo Account (pre-loaded with data):**
-- Email: `virat@flo.app`
-- Password: `vk@flo18`
-
+### Demo Account
+| Field | Value |
+|-------|-------|
+| **Email** | demo@flo.app |
+| **Password** | demo123 |
 ---
 
 ## ✨ Features

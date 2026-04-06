@@ -13,7 +13,22 @@
       },
       "package": "com.yourname.flofinance"
     },
-    "plugins": ["expo-router"],
-    "scheme": "flo"
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "flo",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "007de063-cf75-4f09-82b3-fb20150d7c66"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66"
+    },
+    "ios": {}
   }
 }
