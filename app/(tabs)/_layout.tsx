@@ -7,7 +7,7 @@ import { useTransactionStore } from '../../src/store/transactionStore';
 export default function TabLayout() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
-  const transactions = useTransactionStore(s => s.transactions);
+  const transactions = useTransactionStore(s => s.getTransactions);
 
   return (
     <Tabs
