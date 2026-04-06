@@ -1,5 +1,8 @@
 import { Transaction } from '../types';
-import { startOfWeek, endOfWeek, subWeeks, isWithinInterval, startOfMonth } from 'date-fns';
+import {
+  startOfWeek, endOfWeek, subWeeks,
+  isWithinInterval, startOfMonth, format
+} from 'date-fns';
 
 export const getBalance = (transactions: Transaction[]) => {
   const income = transactions
@@ -16,12 +19,26 @@ export const getThisMonthTransactions = (transactions: Transaction[]) => {
   return transactions.filter(t => new Date(t.date) >= start);
 };
 
-export const getWeeklyTotals = (transactions: Transaction[]) => {
+export const getSpendingByCategory = (transactions: Transaction[]) => {
   const expenses = transactions.filter(t => t.type === 'expense');
-  const thisStart = startOfWeek(new Date());
-  const thisEnd = endOfWeek(new Date());
-  const lastStart = startOfWeek(subWeeks(new Date(), 1));
-  const lastEnd = endOfWeek(subWeeks(new Date(), 1));
+  const map: Record<string, number> = {};
+  expenses.forEach(t => {
+    map[t.category] = (map[t.category] ?? 0) + t.amount;
+  });
+  return Object.entries(map)
+    .sort(([, a], [, b]) => b - a)
+    .map(([category, amount]) => ({ category, amount }));
+};
+
+// ✅ FIXED: counts ALL transactions (income + expense) for weekly totals
+export const getWeeklyTotals = (transactions: Transaction[]) => {
+  // Only expenses for comparison (spending comparison makes more sense)
+  const expenses = transactions.filter(t => t.type === 'expense');
+
+  const thisStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const thisEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+  const lastStart = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
+  const lastEnd = endOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 });
 
   const thisWeek = expenses
     .filter(t => isWithinInterval(new Date(t.date), { start: thisStart, end: thisEnd }))
@@ -34,11 +51,20 @@ export const getWeeklyTotals = (transactions: Transaction[]) => {
   return { thisWeek, lastWeek };
 };
 
-export const getSpendingByCategory = (transactions: Transaction[]) => {
-  const expenses = transactions.filter(t => t.type === 'expense');
-  const map: Record<string, number> = {};
-  expenses.forEach(t => { map[t.category] = (map[t.category] ?? 0) + t.amount; });
-  return Object.entries(map)
-    .sort(([, a], [, b]) => b - a)
-    .map(([category, amount]) => ({ category, amount }));
+// ✅ NEW: group transactions by month label
+export const groupTransactionsByMonth = (transactions: Transaction[]) => {
+  const groups: Record<string, Transaction[]> = {};
+
+  transactions.forEach(t => {
+    const key = format(new Date(t.date), 'MMMM yyyy'); // "April 2026"
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  // Sort groups newest first
+  return Object.entries(groups).sort(([a], [b]) => {
+    const dateA = new Date(groups[a][0].date);
+    const dateB = new Date(groups[b][0].date);
+    return dateB.getTime() - dateA.getTime();
+  });
 };

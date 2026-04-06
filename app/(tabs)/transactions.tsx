@@ -1,25 +1,34 @@
 import { useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, useColorScheme,
-  TextInput, TouchableOpacity
+  View, Text, SectionList, StyleSheet, useColorScheme,
+  TextInput, TouchableOpacity, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
-import { useTransactionStore } from '../../src/store/transactionStore';
+import { useUserTransactions } from '../../src/hooks/useCurrentUser';
 import { getCategoryMeta } from '../../src/constants/categories';
-import { formatCurrency, formatDay } from '../../src/utils/formatters';
+import { formatCurrency, formatDate } from '../../src/utils/formatters';
+import { groupTransactionsByMonth } from '../../src/utils/calculations';
 import { Transaction } from '../../src/types';
 import AppHeader from '../../src/components/ui/AppHeader';
-import { useUserTransactions } from '../../src/hooks/useCurrentUser';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+
+type FilterType = 'all' | 'income' | 'expense';
+type SortType = 'newest' | 'oldest' | 'highest' | 'lowest';
 
 export default function TransactionsScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const router = useRouter();
   const { transactions, deleteTransaction } = useUserTransactions();
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
 
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [sort, setSort] = useState<SortType>('newest');
+  const [showSort, setShowSort] = useState(false);
+
+  // 1. Filter + search
   const filtered = transactions.filter(t => {
     const matchSearch =
       t.category.toLowerCase().includes(search.toLowerCase()) ||
@@ -28,32 +37,113 @@ export default function TransactionsScreen() {
     return matchSearch && matchFilter;
   });
 
-  const totalFiltered = filtered.reduce((sum, t) =>
-    t.type === 'income' ? sum + t.amount : sum - t.amount, 0
+  // 2. Sort
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === 'newest') return new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (sort === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (sort === 'highest') return b.amount - a.amount;
+    if (sort === 'lowest') return a.amount - b.amount;
+    return 0;
+  });
+
+  // 3. Group by month (only when not sorting by amount)
+  const useGrouping = sort === 'newest' || sort === 'oldest';
+  const grouped = useGrouping
+    ? groupTransactionsByMonth(sorted).map(([month, data]) => ({
+        title: month,
+        data,
+        total: data.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0),
+      }))
+    : [{ title: '', data: sorted, total: 0 }];
+
+  const netTotal = filtered.reduce(
+    (sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0
   );
+
+  const handleDelete = (t: Transaction) => {
+    Alert.alert(
+      'Delete Transaction',
+      `Delete ${t.category} — ${formatCurrency(t.amount)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete', style: 'destructive',
+          onPress: () => {
+            deleteTransaction(t.id);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEdit = (t: Transaction) => {
+    router.push({
+      pathname: '/edit-transaction',
+      params: {
+        id: t.id,
+        amount: t.amount.toString(),
+        type: t.type,
+        category: t.category,
+        note: t.note ?? '',
+      },
+    });
+  };
 
   const s = styles(C);
 
   const renderItem = ({ item }: { item: Transaction }) => {
     const meta = getCategoryMeta(item.category);
     return (
-      <View style={s.txRow}>
+      <View style={s.txCard}>
         <View style={[s.iconBg, { backgroundColor: meta.color + '20' }]}>
           <Text style={s.icon}>{meta.icon}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.category}>{item.category}</Text>
-          <Text style={s.note} numberOfLines={1}>
-            {item.note ? item.note : '—'}{' · '}{formatDay(item.date)}
-          </Text>
+          <Text style={s.note} numberOfLines={1}>{item.note || '—'}</Text>
+          <Text style={[s.date, { color: C.subtext }]}>{formatDate(item.date)}</Text>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[s.amount, { color: item.type === 'income' ? C.income : C.expense }]}>
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <Text style={[s.amount, {
+            color: item.type === 'income' ? C.income : C.expense
+          }]}>
             {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
           </Text>
-          <TouchableOpacity onPress={() => deleteTransaction(item.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={{ color: C.expense, fontSize: 11, marginTop: 4 }}>Delete</Text>
-          </TouchableOpacity>
+          <View style={s.actionRow}>
+            <TouchableOpacity
+              style={[s.actionBtn, { backgroundColor: C.primary + '18' }]}
+              onPress={() => handleEdit(item)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="pencil-outline" size={13} color={C.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.actionBtn, { backgroundColor: C.expense + '18' }]}
+              onPress={() => handleDelete(item)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="trash-outline" size={13} color={C.expense} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderSectionHeader = ({ section }: any) => {
+    if (!section.title) return null;
+    return (
+      <View style={s.sectionHeader}>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{section.title}</Text>
+        <View style={[s.sectionNet, {
+          backgroundColor: section.total >= 0 ? C.income + '18' : C.expense + '18'
+        }]}>
+          <Text style={[s.sectionNetText, {
+            color: section.total >= 0 ? C.income : C.expense
+          }]}>
+            {section.total >= 0 ? '+' : ''}{formatCurrency(section.total)}
+          </Text>
         </View>
       </View>
     );
@@ -63,7 +153,7 @@ export default function TransactionsScreen() {
     <View style={s.container}>
       <AppHeader />
 
-      {/* Page Title + Summary */}
+      {/* Title + Net */}
       <View style={s.titleRow}>
         <View>
           <Text style={s.pageTitle}>Statement</Text>
@@ -72,20 +162,18 @@ export default function TransactionsScreen() {
           </Text>
         </View>
         <View style={[s.netBadge, {
-          backgroundColor: totalFiltered >= 0 ? C.income + '18' : C.expense + '18'
+          backgroundColor: netTotal >= 0 ? C.income + '18' : C.expense + '18'
         }]}>
-          <Text style={{ fontSize: 11, color: C.subtext, marginBottom: 2 }}>Net</Text>
-          <Text style={[s.netAmount, {
-            color: totalFiltered >= 0 ? C.income : C.expense
-          }]}>
-            {totalFiltered >= 0 ? '+' : ''}{formatCurrency(totalFiltered)}
+          <Text style={[s.netLabel, { color: C.subtext }]}>Net</Text>
+          <Text style={[s.netAmount, { color: netTotal >= 0 ? C.income : C.expense }]}>
+            {netTotal >= 0 ? '+' : ''}{formatCurrency(netTotal)}
           </Text>
         </View>
       </View>
 
       {/* Search */}
       <View style={[s.searchRow, { backgroundColor: C.card, borderColor: C.border }]}>
-        <Text style={{ fontSize: 16, marginRight: 8 }}>🔍</Text>
+        <Ionicons name="search-outline" size={18} color={C.subtext} style={{ marginRight: 8 }} />
         <TextInput
           style={[s.searchInput, { color: C.text }]}
           placeholder="Search by category or note..."
@@ -95,47 +183,79 @@ export default function TransactionsScreen() {
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Text style={{ color: C.subtext, fontSize: 18, marginLeft: 4 }}>✕</Text>
+            <Ionicons name="close-circle" size={18} color={C.subtext} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Filter Pills */}
-      <View style={s.pills}>
-        {(['all', 'income', 'expense'] as const).map(f => (
-          <TouchableOpacity
-            key={f}
-            style={[
-              s.pill,
-              { borderColor: C.border, backgroundColor: C.card },
-              filter === f && { backgroundColor: C.primary, borderColor: C.primary }
-            ]}
-            onPress={() => setFilter(f)}
-          >
-            <Text style={[
-              s.pillText,
-              { color: C.subtext },
-              filter === f && { color: '#F0EDE5' }
-            ]}>
-              {f === 'all' ? 'All' : f === 'income' ? '↑ Income' : '↓ Expense'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Filter + Sort */}
+      <View style={s.controlRow}>
+        <View style={s.pills}>
+          {(['all', 'income', 'expense'] as FilterType[]).map(f => (
+            <TouchableOpacity
+              key={f}
+              style={[s.pill, { borderColor: C.border, backgroundColor: C.card },
+                filter === f && { backgroundColor: C.primary, borderColor: C.primary }]}
+              onPress={() => setFilter(f)}
+            >
+              <Text style={[s.pillText, { color: C.subtext },
+                filter === f && { color: '#F0EDE5' }]}>
+                {f === 'all' ? 'All' : f === 'income' ? '↑ Income' : '↓ Expense'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity
+          style={[s.sortBtn, { backgroundColor: C.card, borderColor: C.border }]}
+          onPress={() => setShowSort(!showSort)}
+        >
+          <Ionicons name="funnel-outline" size={14} color={C.primary} />
+          <Text style={[s.sortText, { color: C.primary }]}>Sort</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={filtered}
-        keyExtractor={t => t.id}
+      {/* Sort Dropdown */}
+      {showSort && (
+        <View style={[s.sortDropdown, { backgroundColor: C.card, borderColor: C.border }]}>
+          {([
+            { key: 'newest', label: '📅 Newest First' },
+            { key: 'oldest', label: '📅 Oldest First' },
+            { key: 'highest', label: '💰 Highest Amount' },
+            { key: 'lowest', label: '💰 Lowest Amount' },
+          ] as { key: SortType; label: string }[]).map(opt => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[s.sortOption, sort === opt.key && { backgroundColor: C.primary + '15' }]}
+              onPress={() => { setSort(opt.key); setShowSort(false); }}
+            >
+              <Text style={[s.sortOptionText, { color: C.text },
+                sort === opt.key && { color: C.primary, fontWeight: '700' }]}>
+                {opt.label}
+              </Text>
+              {sort === opt.key && <Ionicons name="checkmark" size={16} color={C.primary} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Grouped List */}
+      <SectionList
+        sections={grouped}
+        keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        renderSectionHeader={renderSectionHeader}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Text style={{ fontSize: 48 }}>💸</Text>
+            <Text style={{ fontSize: 52 }}>💸</Text>
             <Text style={[s.emptyTitle, { color: C.text }]}>No transactions found</Text>
-            <Text style={{ color: C.subtext, fontSize: 13, marginTop: 4 }}>
-              {search ? 'Try a different search term' : 'Tap + to add your first one'}
+            <Text style={[s.emptySub, { color: C.subtext }]}>
+              {search
+                ? 'Try a different search or filter'
+                : 'Tap + to record your first transaction'}
             </Text>
           </View>
         }
@@ -146,7 +266,7 @@ export default function TransactionsScreen() {
         style={[s.fab, { backgroundColor: C.primary }]}
         onPress={() => router.push('/add-transaction')}
       >
-        <Text style={{ color: '#F0EDE5', fontSize: 26, lineHeight: 30 }}>+</Text>
+        <Ionicons name="add" size={28} color="#F0EDE5" />
       </TouchableOpacity>
     </View>
   );
@@ -160,35 +280,71 @@ const styles = (C: typeof Colors.light) => StyleSheet.create({
   },
   pageTitle: { fontSize: 26, fontWeight: '800', color: C.text },
   txCount: { fontSize: 13, marginTop: 2 },
-  netBadge: { padding: 10, borderRadius: 12, alignItems: 'center' },
+  netBadge: { padding: 12, borderRadius: 12, alignItems: 'center', minWidth: 80 },
+  netLabel: { fontSize: 11, marginBottom: 2 },
   netAmount: { fontSize: 16, fontWeight: '800' },
   searchRow: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 16, marginBottom: 10,
-    paddingHorizontal: 14, paddingVertical: 10,
+    paddingHorizontal: 14, paddingVertical: 11,
     borderRadius: 14, borderWidth: 1.5,
   },
   searchInput: { flex: 1, fontSize: 14 },
-  pills: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 12 },
-  pill: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5,
+  controlRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, marginBottom: 8, gap: 8,
   },
-  pillText: { fontSize: 13, fontWeight: '600' },
-  txRow: {
+  pills: { flexDirection: 'row', gap: 8, flex: 1 },
+  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
+  pillText: { fontSize: 12, fontWeight: '600' },
+  sortBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5,
+  },
+  sortText: { fontSize: 12, fontWeight: '600' },
+  sortDropdown: {
+    marginHorizontal: 16, marginBottom: 8,
+    borderRadius: 14, borderWidth: 1.5, overflow: 'hidden',
+  },
+  sortOption: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 13,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  sortOptionText: { fontSize: 14 },
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingVertical: 12, paddingTop: 20,
+  },
+  sectionTitle: { fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
+  sectionNet: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  sectionNetText: { fontSize: 13, fontWeight: '700' },
+  txCard: {
     flexDirection: 'row', alignItems: 'center', padding: 14,
-    borderRadius: 14, backgroundColor: C.card,
+    borderRadius: 16, backgroundColor: C.card,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
-  iconBg: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  iconBg: {
+    width: 46, height: 46, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
   icon: { fontSize: 22 },
   category: { fontSize: 14, fontWeight: '700', color: C.text },
   note: { fontSize: 12, color: C.subtext, marginTop: 2 },
+  date: { fontSize: 11, marginTop: 3 },
   amount: { fontSize: 15, fontWeight: '800' },
-  empty: { alignItems: 'center', marginTop: 80, gap: 8 },
-  emptyTitle: { fontSize: 17, fontWeight: '700' },
+  actionRow: { flexDirection: 'row', gap: 6 },
+  actionBtn: {
+    width: 28, height: 28, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  empty: { alignItems: 'center', paddingTop: 80, gap: 10 },
+  emptyTitle: { fontSize: 18, fontWeight: '700' },
+  emptySub: { fontSize: 13, textAlign: 'center' },
   fab: {
     position: 'absolute', bottom: 24, right: 24,
     width: 56, height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center', elevation: 6,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8,
   },
 });

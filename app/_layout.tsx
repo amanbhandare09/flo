@@ -9,23 +9,17 @@ import { useUserTransactions, useUserGoals } from '../src/hooks/useCurrentUser';
 
 function SeedHandler() {
   const user = useAuthStore(s => s.user);
-  const { initSeed: seedTransactions } = useUserTransactions();
+  const { initSeed: seedTx } = useUserTransactions();
   const { initSeed: seedGoals } = useUserGoals();
-
   useEffect(() => {
-    if (user?.id) {
-      seedTransactions();
-      seedGoals();
-    }
-  }, [user?.id]);   // re-runs when user changes
-
+    if (user?.id) { seedTx(); seedGoals(); }
+  }, [user?.id]);
   return null;
 }
 
 export default function RootLayout() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -41,6 +35,10 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen
           name="add-transaction"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="edit-transaction"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
       </Stack>

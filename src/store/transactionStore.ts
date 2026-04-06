@@ -71,7 +71,7 @@ export const useTransactionStore = create<TransactionStore>()(
       }),
     }),
     {
-      name: 'flo-transactions-v2',
+      name: 'flo-transactions-v3',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

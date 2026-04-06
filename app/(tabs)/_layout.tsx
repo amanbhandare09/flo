@@ -8,6 +8,7 @@ export default function TabLayout() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const transactions = useTransactionStore(s => s.getTransactions);
+  const txCount = transactions.length;
 
   return (
     <Tabs
@@ -37,18 +38,15 @@ export default function TabLayout() {
 
       <Tabs.Screen name="transactions" options={{
         title: 'Transactions',
-        tabBarIcon: ({ color, size, focused }) => (
-          <View>
-            <Ionicons name="list-outline" size={size} color={color} />
-            {transactions.length > 0 && (
-              <View style={[styles.badge, { backgroundColor: C.primary }]}>
-                <Text style={styles.badgeText}>
-                  {transactions.length > 99 ? '99+' : transactions.length}
-                </Text>
-              </View>
-            )}
-          </View>
-        ),
+        tabBarBadge: txCount > 0 ? txCount : undefined,
+        tabBarBadgeStyle: {
+          backgroundColor: C.primary,
+          fontSize: 10,
+          minWidth: 18,
+          height: 18,
+        },
+        tabBarIcon: ({ color, size }) =>
+          <Ionicons name="list-outline" size={size} color={color} />,
       }} />
 
       <Tabs.Screen name="insights" options={{

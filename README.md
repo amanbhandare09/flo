@@ -15,8 +15,8 @@
 **Demo Video:** [Loom/YouTube link]
 
 **Demo Account (pre-loaded with data):**
-- Email: `demo@flo.app`
-- Password: `demo123`
+- Email: `virat@flo.app`
+- Password: `vk@flo18`
 
 ---
 

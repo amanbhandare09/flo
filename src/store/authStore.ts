@@ -23,21 +23,43 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isLoggedIn: false,
-      users: [{ id: 'demo-user', name: 'Demo User', email: 'demo@flo.app', password: 'demo123' }],
+
+      // Pre-seeded demo account — always available
+      users: [
+        {
+          id: 'demo-user-002',
+          name: 'Virat Kohli',
+          email: 'virat@flo.app',
+          password: 'vk@flo18',
+        },
+      ],
 
       login: (email, password) => {
         const found = get().users.find(
-          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+          u =>
+            u.email.toLowerCase() === email.toLowerCase() &&
+            u.password === password
         );
-        if (!found) return { success: false, error: 'Invalid email or password' };
+        if (!found) {
+          return { success: false, error: 'Invalid email or password' };
+        }
         set({ user: found, isLoggedIn: true });
         return { success: true };
       },
 
       signup: (name, email, password) => {
-        const exists = get().users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        if (exists) return { success: false, error: 'Email already registered' };
-        const newUser: User = { id: Date.now().toString(), name, email, password };
+        const exists = get().users.find(
+          u => u.email.toLowerCase() === email.toLowerCase()
+        );
+        if (exists) {
+          return { success: false, error: 'An account with this email already exists' };
+        }
+        const newUser: User = {
+          id: `user-${Date.now()}`,
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          password,
+        };
         set(state => ({
           users: [...state.users, newUser],
           user: newUser,
@@ -48,6 +70,9 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: () => set({ user: null, isLoggedIn: false }),
     }),
-    { name: 'flo-auth', storage: createJSONStorage(() => AsyncStorage) }
+    {
+      name: 'flo-auth',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
   )
 );
