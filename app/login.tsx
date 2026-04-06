@@ -105,9 +105,9 @@ export default function LoginScreen() {
           {/* Demo hint */}
           <View style={s.demoBox}>
             <Text style={s.demoTitle}>🧪 Demo Account</Text>
-            <Text style={s.demoText}>Email: demo@flo.app</Text>
-            <Text style={s.demoText}>Password: demo123</Text>
-            <TouchableOpacity onPress={() => { setEmail('demo@flo.app'); setPassword('demo123'); }}>
+            <Text style={s.demoText}>Email: virat@flo.app</Text>
+            <Text style={s.demoText}>Password: vk@flo18</Text>
+            <TouchableOpacity onPress={() => { setEmail('virat@flo.app'); setPassword('vk@flo18'); }}>
               <Text style={[s.demoText, { color: C.primary, fontWeight: '700', marginTop: 4 }]}>
                 Tap to autofill →
               </Text>

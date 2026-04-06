@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isLoggedIn: false,
-      users: [{ name: 'Demo User', email: 'demo@flo.app', password: 'demo123' }],
+      users: [{ name: 'Demo User', email: 'virat@flo.app', password: 'vk@flo18' }],
 
       login: (email, password) => {
         const found = get().users.find(
