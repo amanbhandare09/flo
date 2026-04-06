@@ -22,8 +22,8 @@
 ### Demo Account
 | Field | Value |
 |-------|-------|
-| **Email** | demo@flo.app |
-| **Password** | demo123 |
+| **Email** | virat@flo.app |
+| **Password** | vk@flo18 |
 ---
 
 ## ✨ Features
