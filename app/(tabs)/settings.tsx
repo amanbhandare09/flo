@@ -6,13 +6,14 @@ import { useTransactionStore } from '../../src/store/transactionStore';
 import { formatCurrency } from '../../src/utils/formatters';
 import { getBalance } from '../../src/utils/calculations';
 import { Ionicons } from '@expo/vector-icons';
+import { useUserTransactions } from '../../src/hooks/useCurrentUser';
 
 export default function SettingsScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const transactions = useTransactionStore(s => s.transactions);
+  const { transactions } = useUserTransactions();
   const { income, expense, balance } = getBalance(transactions);
 
   const handleLogout = () => {

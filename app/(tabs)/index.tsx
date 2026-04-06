@@ -5,12 +5,13 @@ import { useTransactionStore } from '../../src/store/transactionStore';
 import { getBalance, getThisMonthTransactions, getSpendingByCategory } from '../../src/utils/calculations';
 import { formatCurrency, formatDate } from '../../src/utils/formatters';
 import AppHeader from '../../src/components/ui/AppHeader';import { getCategoryMeta } from '../../src/constants/categories';
+import { useUserTransactions } from '../../src/hooks/useCurrentUser';
 
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const router = useRouter();
-  const transactions = useTransactionStore(s => s.transactions);
+  const { transactions } = useUserTransactions();
   const thisMonth = getThisMonthTransactions(transactions);
   const { income, expense, balance } = getBalance(thisMonth);
   const recent = transactions.slice(0, 5);

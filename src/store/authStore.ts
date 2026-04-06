@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
+  id: string;
   name: string;
   email: string;
   password: string;
@@ -22,7 +23,7 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isLoggedIn: false,
-      users: [{ name: 'Demo User', email: 'demo@flo.app', password: 'demo123' }],
+      users: [{ id: 'demo-user', name: 'Demo User', email: 'demo@flo.app', password: 'demo123' }],
 
       login: (email, password) => {
         const found = get().users.find(
@@ -36,7 +37,7 @@ export const useAuthStore = create<AuthStore>()(
       signup: (name, email, password) => {
         const exists = get().users.find(u => u.email.toLowerCase() === email.toLowerCase());
         if (exists) return { success: false, error: 'Email already registered' };
-        const newUser = { name, email, password };
+        const newUser: User = { id: Date.now().toString(), name, email, password };
         set(state => ({
           users: [...state.users, newUser],
           user: newUser,

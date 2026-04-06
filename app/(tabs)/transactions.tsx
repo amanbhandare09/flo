@@ -10,12 +10,13 @@ import { getCategoryMeta } from '../../src/constants/categories';
 import { formatCurrency, formatDay } from '../../src/utils/formatters';
 import { Transaction } from '../../src/types';
 import AppHeader from '../../src/components/ui/AppHeader';
+import { useUserTransactions } from '../../src/hooks/useCurrentUser';
 
 export default function TransactionsScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const router = useRouter();
-  const { transactions, deleteTransaction } = useTransactionStore();
+  const { transactions, deleteTransaction } = useUserTransactions();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
 

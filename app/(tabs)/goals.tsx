@@ -12,12 +12,13 @@ import { getCategoryMeta, CATEGORIES } from '../../src/constants/categories';
 import { Category } from '../../src/types';
 import AppHeader from '../../src/components/ui/AppHeader';
 import { Ionicons } from '@expo/vector-icons';
+import { useUserTransactions, useUserGoals } from '../../src/hooks/useCurrentUser';
 
 export default function GoalsScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
-  const { goals, addGoal, deleteGoal } = useGoalStore();
-  const transactions = useTransactionStore(s => s.transactions);
+  const { goals, addGoal, deleteGoal } = useUserGoals();
+  const { transactions } = useUserTransactions();
   const thisMonth = getThisMonthTransactions(transactions);
   const byCategory = getSpendingByCategory(thisMonth);
   const { income, expense } = getBalance(thisMonth);

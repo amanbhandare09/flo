@@ -4,11 +4,12 @@ import { useTransactionStore } from '../../src/store/transactionStore';
 import { getSpendingByCategory, getWeeklyTotals, getThisMonthTransactions } from '../../src/utils/calculations';
 import { formatCurrency } from '../../src/utils/formatters';
 import { getCategoryMeta } from '../../src/constants/categories';
+import { useUserTransactions } from '../../src/hooks/useCurrentUser';
 
 export default function InsightsScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
-  const transactions = useTransactionStore(s => s.transactions);
+  const { transactions } = useUserTransactions();
   const thisMonth = getThisMonthTransactions(transactions);
   const byCategory = getSpendingByCategory(thisMonth);
   const { thisWeek, lastWeek } = getWeeklyTotals(transactions);

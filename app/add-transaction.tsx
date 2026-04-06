@@ -8,12 +8,13 @@ import { Colors } from '../src/constants/colors';
 import { useTransactionStore } from '../src/store/transactionStore';
 import { CATEGORIES } from '../src/constants/categories';
 import { Category, TransactionType } from '../src/types';
+import { useUserTransactions } from '../src/hooks/useCurrentUser';
 
 export default function AddTransactionScreen() {
   const scheme = useColorScheme();
   const C = Colors[scheme ?? 'light'];
   const router = useRouter();
-  const addTransaction = useTransactionStore(s => s.addTransaction);
+  const { addTransaction } = useUserTransactions();
 
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
@@ -25,13 +26,6 @@ export default function AddTransactionScreen() {
       Alert.alert('Invalid amount', 'Please enter a valid amount greater than 0');
       return;
     }
-    addTransaction({
-      amount: Number(amount),
-      type,
-      category,
-      date: new Date().toISOString(),
-      note: note.trim(),
-    });
     router.back();
   };
 

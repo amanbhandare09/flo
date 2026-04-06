@@ -5,40 +5,74 @@ import { Transaction } from '../types';
 import { seedTransactions } from '../utils/seedData';
 
 interface TransactionStore {
-  transactions: Transaction[];
-  hasSeeded: boolean;
-  addTransaction: (t: Omit<Transaction, 'id' | 'createdAt'>) => void;
-  updateTransaction: (id: string, data: Partial<Transaction>) => void;
-  deleteTransaction: (id: string) => void;
-  initSeed: () => void;
+  transactionsByUser: Record<string, Transaction[]>;
+  seededUsers: string[];
+  getTransactions: (userId: string) => Transaction[];
+  addTransaction: (userId: string, t: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  updateTransaction: (userId: string, id: string, data: Partial<Transaction>) => void;
+  deleteTransaction: (userId: string, id: string) => void;
+  initSeed: (userId: string) => void;
 }
 
 export const useTransactionStore = create<TransactionStore>()(
   persist(
     (set, get) => ({
-      transactions: [],
-      hasSeeded: false,
+      transactionsByUser: {},
+      seededUsers: [],
 
-      initSeed: () => {
-        if (!get().hasSeeded) {
-          set({ transactions: seedTransactions, hasSeeded: true });
+      getTransactions: (userId) => {
+        return get().transactionsByUser[userId] ?? [];
+      },
+
+      initSeed: (userId) => {
+        if (!get().seededUsers.includes(userId)) {
+          set(state => ({
+            transactionsByUser: {
+              ...state.transactionsByUser,
+              [userId]: seedTransactions,
+            },
+            seededUsers: [...state.seededUsers, userId],
+          }));
         }
       },
 
-      addTransaction: (t) => set(state => ({
-        transactions: [{
-          ...t, id: Date.now().toString(), createdAt: new Date().toISOString()
-        }, ...state.transactions]
-      })),
+      addTransaction: (userId, t) => set(state => {
+        const existing = state.transactionsByUser[userId] ?? [];
+        return {
+          transactionsByUser: {
+            ...state.transactionsByUser,
+            [userId]: [{
+              ...t,
+              id: Date.now().toString(),
+              createdAt: new Date().toISOString(),
+            }, ...existing],
+          },
+        };
+      }),
 
-      updateTransaction: (id, data) => set(state => ({
-        transactions: state.transactions.map(t => t.id === id ? { ...t, ...data } : t)
-      })),
+      updateTransaction: (userId, id, data) => set(state => {
+        const existing = state.transactionsByUser[userId] ?? [];
+        return {
+          transactionsByUser: {
+            ...state.transactionsByUser,
+            [userId]: existing.map(t => t.id === id ? { ...t, ...data } : t),
+          },
+        };
+      }),
 
-      deleteTransaction: (id) => set(state => ({
-        transactions: state.transactions.filter(t => t.id !== id)
-      })),
+      deleteTransaction: (userId, id) => set(state => {
+        const existing = state.transactionsByUser[userId] ?? [];
+        return {
+          transactionsByUser: {
+            ...state.transactionsByUser,
+            [userId]: existing.filter(t => t.id !== id),
+          },
+        };
+      }),
     }),
-    { name: 'flo-transactions', storage: createJSONStorage(() => AsyncStorage) }
+    {
+      name: 'flo-transactions-v2',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
   )
 );
