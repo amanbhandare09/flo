@@ -190,7 +190,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={s.version}>Flo · Your money, simplified 🌿{'\n'}v1.0.0</Text>
+      <Text style={s.version}>Flo · Your money, simplified 🌿{'\n'}v2.1.0</Text>
 
     </ScrollView>
   );
