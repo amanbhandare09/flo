@@ -2,6 +2,7 @@
   "expo": {
     "name": "Flo",
     "slug": "flo-finance",
+    "platforms": ["ios", "android"],
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",

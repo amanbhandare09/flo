@@ -12,6 +12,9 @@
 2. Open this link directly on your mobile device:
    **[exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66](exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66)**
    
+   **Preview Application Update on Expo:**
+   [View the latest deployment here](https://expo.dev/accounts/amanb09/projects/flo-finance/updates/de2c71a2-a2ed-4c4a-957f-f7de48d06bdb)
+   
    **OR scan this QR code:**<br>
    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=exp://u.expo.dev/007de063-cf75-4f09-82b3-fb20150d7c66" alt="Expo Go QR Code" width="200" height="200"/>
 
@@ -24,36 +27,32 @@
 |-------|-------|
 | **Email** | virat@flo.app |
 | **Password** | vk@flo18 |
+
 ---
 
 ## ✨ Features
 
 ### Core
-- **Home Dashboard** — Balance overview, income vs expenses,
-  spending by category chart, daily financial tip
-- **Transaction Management** — Full CRUD: add, view, edit,
-  delete transactions with confirmation
-- **Smart Filtering** — Search by category/note, filter by
-  income/expense, sort by date or amount
-- **Budget Shields** — Set monthly spending limits per category
-  with visual progress tracking and over-budget alerts
-- **Insights Screen** — Week-over-week comparison, category
-  breakdown, monthly summary stats
-- **Profile Screen** — User stats, settings, logout
+- **Home Dashboard** — Balance overview, income vs expenses, spending by category chart, and daily financial tips.
+- **Transaction Management** — Full CRUD: add, view, edit, and delete transactions with confirmation prompts.
+- **Smart Filtering** — Search by category/note, filter by income/expense, and sort by date or amount.
+- **Budget Shields** — Set monthly spending limits per category with visual progress tracking and over-budget alerts.
+- **Insights Screen** — Week-over-week comparison, category breakdown, and monthly summary stats.
+- **Profile Screen** — User stats, application settings, and secure logout.
 
 ### UX Details
-- Personalised greeting based on time of day and user name
-- Haptic feedback on save and delete actions
-- Empty states with helpful prompts on every screen
-- Delete confirmation alerts to prevent accidental loss
-- Per-user data isolation — multiple accounts on same device
-- Rich seed data on first login so evaluators see a live dashboard
+- Personalised greeting based on time of day and user name.
+- Haptic feedback on save and delete actions for a tactile experience.
+- Empty states with helpful prompts on every screen to guide new users.
+- Delete confirmation alerts to prevent accidental data loss.
+- Per-user data isolation — support for multiple accounts on the same device.
+- Rich seed data on first login so evaluators can immediately interact with a live dashboard.
 
 ### Auth
-- Email/password signup and login
-- Form validation with inline error messages
-- Demo account with pre-filled credentials
-- JWT-ready architecture (AsyncStorage token slot prepared)
+- Email/password signup and login.
+- Form validation with real-time inline error messages.
+- Demo account provided for instant evaluation.
+- JWT-ready architecture with prepared AsyncStorage token slots.
 
 ---
 
@@ -61,12 +60,12 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | React Native (Expo SDK 51) |
+| Framework | React Native (Expo SDK 54) |
 | Language | TypeScript |
 | Navigation | Expo Router (file-based) |
 | State | Zustand with persist middleware |
 | Storage | AsyncStorage (offline-first) |
-| Charts | Custom React Native components (no library) |
+| Charts | Custom React Native components (optimized, no heavy libraries) |
 | Icons | Expo Vector Icons (Ionicons) |
 | Haptics | expo-haptics |
 
@@ -81,7 +80,7 @@
 ### Steps
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourusername/flo-finance.git
+git clone [https://github.com/yourusername/flo-finance.git](https://github.com/yourusername/flo-finance.git)
 cd flo-finance
 
 # 2. Install dependencies
@@ -91,110 +90,47 @@ npm install
 npx expo start --clear
 
 # 4. Scan the QR code with Expo Go
-```
 
-### APK (Android)
-```bash
+APK (Android Build)
+
 npm install -g eas-cli
 eas login
 eas build -p android --profile preview
-# Download link printed after ~15 mins
-```
+# Download link will be generated after ~15 mins
 
----
+🎨 Design Decisions
+Color Palette — Cyprus & Sand Dune - Primary: #004643 (Cyprus green) — communicates trust and financial stability.
 
-## 📁 Project Structure
+Background: #F0EDE5 (Sand Dune) — a warm, paper-like tone that is approachable and easy on the eyes.
 
-flo/
-├── app/                        # Expo Router screens
-│   ├── (tabs)/                 # Bottom tab screens
-│   │   ├── index.tsx           # Home dashboard
-│   │   ├── transactions.tsx    # Transaction list + CRUD
-│   │   ├── insights.tsx        # Spending insights
-│   │   ├── goals.tsx           # Budget shields
-│   │   └── settings.tsx        # Profile & settings
-│   ├── add-transaction.tsx     # Add transaction modal
-│   ├── edit-transaction.tsx    # Edit transaction modal
-│   ├── login.tsx               # Login screen
-│   ├── signup.tsx              # Signup screen
-│   └── index.tsx               # Splash / entry router
-└── src/
-├── store/                  # Zustand state (user-scoped)
-│   ├── authStore.ts
-│   ├── transactionStore.ts
-│   └── goalStore.ts
-├── hooks/                  # Convenience hooks
-│   └── useCurrentUser.ts   # User-scoped store access
-├── utils/                  # Pure functions
-│   ├── calculations.ts     # Balance, totals, insights logic
-│   ├── formatters.ts       # Currency, date formatting
-│   ├── helpers.ts          # Time of day, misc
-│   └── seedData.ts         # Demo data for first launch
-├── constants/
-│   ├── colors.ts           # Cyprus/Sand Dune theme
-│   └── categories.ts       # Category metadata
-├── types/index.ts          # TypeScript interfaces
-└── components/ui/
-└── AppHeader.tsx       # Shared branded header
+Dark Mode: #0D1F1E — a deep forest tone for reduced eye strain.
 
----
+State Management: Zustand over Redux For a focused personal finance app, Zustand's minimal API reduces boilerplate by ~60% while providing identical reactivity and persistence. It offers a cleaner developer experience without the complexity of Redux.
 
-## 🎨 Design Decisions
+Custom Charts vs Libraries Standard libraries often require heavy peer dependencies. By building custom bar and progress charts with standard View components, we achieved full theme control and significantly smaller bundle sizes.
 
-**Color Palette — Cyprus & Sand Dune**  
-Primary: `#004643` (Cyprus green) — communicates trust, stability  
-Background: `#F0EDE5` (Sand Dune) — warm, approachable, easy on eyes  
-Dark mode background: `#0D1F1E` — deep forest tone
+Data Persistence Transactions and goals are persisted locally using AsyncStorage. The stores are namespaced by userId, ensuring that data remains isolated even if multiple users share the same device.
 
-**Why Zustand over Redux?**  
-For a focused single-user app, Zustand's minimal API reduces
-boilerplate by ~60% while providing the same reactivity. Redux
-would add unnecessary complexity at this scale.
+🔭 Roadmap (Next Steps)
+[ ] NestJS Backend — Implement a REST API with robust JWT authentication.
 
-**Why no chart library?**  
-`react-native-gifted-charts` requires `expo-linear-gradient`
-and adds ~2MB to the bundle. Custom bar charts built with
-`View` components achieve the same visual result with zero
-dependencies and full theme control.
+[ ] Cloud Sync — Integrate PostgreSQL via Supabase for multi-device data persistence.
 
-**Why AsyncStorage over SQLite?**  
-For a portfolio app with <1000 transactions per user,
-AsyncStorage is sufficient and simpler to reason about.
-SQLite would be the right choice at production scale
-(added as a future improvement in the roadmap).
+[ ] AI Spending Analyst — Claude API integration for personalized spending insights.
 
-**Per-user data isolation**  
-Transaction and goal stores are namespaced by `userId`:
-`transactionsByUser[userId]`. This ensures multiple accounts
-on the same device see only their own data — a pattern that
-maps directly to the planned NestJS backend where isolation
-is handled at the DB level via `userId` foreign keys.
+[ ] Push Notifications — Automated anomaly detection and budget limit alerts.
 
----
+[ ] Export Options — Generate and download monthly statements in CSV/PDF format.
 
-## 🔭 Roadmap (Next Steps)
+[ ] Recurring Transactions — Automated logging for subscriptions and utility bills.
 
-- [ ] **NestJS Backend** — REST API with JWT authentication
-- [ ] **PostgreSQL via Supabase** — Cloud persistence, multi-device sync
-- [ ] **AI Spending Analyst** — Claude API integration for
-      personalized insights ("You spend 3x more on weekends")
-- [ ] **AI Financial Chat** — Ask questions about your own money in
-      natural language ("Am I on track this month?")
-- [ ] **Push Notifications** — Anomaly detection alerts via cron jobs
-- [ ] **Export to CSV/PDF** — Monthly statement download
-- [ ] **Recurring Transactions** — Auto-log subscriptions/salary
-- [ ] **Multi-currency Support** — For international users
+💡 Assumptions Made
+Budget Scope: The budget "Shields" operate on a fixed calendar month basis.
 
----
+Currency: Seed data and default formatting use INR (₹).
 
-## 💡 Assumptions Made
+Theming: The app defaults to the system's Light/Dark mode setting for a native feel.
 
-1. Month scope is fixed to calendar month (not rolling 30 days)
-2. Budget Shields track actual spending vs limit — not manual input
-3. Seed data uses INR (₹) as the default currency
-4. Dark/Light mode follows system setting (React Native best practice)
-5. No email verification on signup — acceptable for a portfolio app;
-   production would require OTP or magic link
+Offline Access: The app is designed to be functional offline, syncing only when a backend is integrated.
 
----
-
+Security: No email verification is implemented for the portfolio version; production would require OTP/Magic Link.
